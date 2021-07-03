@@ -472,7 +472,7 @@ class Yolact(nn.Module):
         self.detect = Detect(cfg.num_classes, bkg_label=0, top_k=cfg.nms_top_k,
             conf_thresh=cfg.nms_conf_thresh, nms_thresh=cfg.nms_thresh)
 
-    def decode(loc, priors):
+    def decode(self, loc, priors):
         variances = [0.1, 0.2]
         boxes = torch.cat((priors[:, :2] + loc[:, :, :2] * variances[0] * priors[:, 2:], priors[:, 2:] * torch.exp(loc[:, :, 2:] * variances[1])), 2)
 
