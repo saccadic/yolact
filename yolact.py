@@ -20,19 +20,15 @@ from utils.functions import MovingAverage, make_net
 # This is required for Pytorch 1.0.1 on Windows to initialize Cuda on some driver versions.
 # See the bug report here: https://github.com/pytorch/pytorch/issues/17108
 # torch.cuda.current_device()
-use_jit = False
- ScriptModuleWrapper = torch.jit.ScriptModule if use_jit else nn.Module
- script_method_wrapper = torch.jit.script_method if use_jit else lambda fn, _rcn=None: fn
 
 
 # As of March 10, 2019, Pytorch DataParallel still doesn't support JIT Script Modules
-use_jit = torch.cuda.device_count() <= 1
-if not use_jit:
-    print('Multiple GPUs detected! Turning off JIT.')
-
+use_jit = False
 ScriptModuleWrapper = torch.jit.ScriptModule if use_jit else nn.Module
 script_method_wrapper = torch.jit.script_method if use_jit else lambda fn, _rcn=None: fn
 
+if not use_jit:
+    print('Multiple GPUs detected! Turning off JIT.')
 
 
 class Concat(nn.Module):
