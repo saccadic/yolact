@@ -472,6 +472,16 @@ class Yolact(nn.Module):
         self.detect = Detect(cfg.num_classes, bkg_label=0, top_k=cfg.nms_top_k,
             conf_thresh=cfg.nms_conf_thresh, nms_thresh=cfg.nms_thresh)
 
+    def decode(loc, priors):
+        variances = [0.1, 0.2]
+        boxes = torch.cat((priors[:, :2] + loc[:, :, :2] * variances[0] * priors[:, 2:], priors[:, 2:] * torch.exp(loc[:, :, 2:] * variances[1])), 2)
+
+        boxes_result1 = boxes[:, :, :2] - boxes[:, :, 2:] / 2
+        boxes_result2 = boxes[:, :, 2:] + boxes[:, :, :2]
+        boxes_result = torch.cat((boxes_result1, boxes_result2), 2)
+
+        return boxes_result
+
     def save_weights(self, path):
         """ Saves the model's weights using compression because the file sizes were getting too big. """
         torch.save(self.state_dict(), path)
@@ -559,7 +569,6 @@ class Yolact(nn.Module):
         for module in self.modules():
             if isinstance(module, nn.BatchNorm2d):
                 module.train() if enable else module.eval()
-
                 module.weight.requires_grad = enable
                 module.bias.requires_grad = enable
     
@@ -676,7 +685,7 @@ class Yolact(nn.Module):
                     pred_outs['conf'] = F.softmax(pred_outs['conf'], -1)
 
             if self.save_onnx:
-                pred_outs['boxes'] = decode(pred_outs['loc'], pred_outs['priors']) # decode output boxes
+                pred_outs['boxes'] = self.decode(pred_outs['loc'], pred_outs['priors']) # decode output boxes
                 pred_outs.pop('priors') # remove unused in postprocessing layers
                 pred_outs.pop('loc') # remove unused in postprocessing layers
                 return pred_outs
