@@ -19,7 +19,11 @@ from utils.functions import MovingAverage, make_net
 
 # This is required for Pytorch 1.0.1 on Windows to initialize Cuda on some driver versions.
 # See the bug report here: https://github.com/pytorch/pytorch/issues/17108
-torch.cuda.current_device()
+# torch.cuda.current_device()
+use_jit = False
+ ScriptModuleWrapper = torch.jit.ScriptModule if use_jit else nn.Module
+ script_method_wrapper = torch.jit.script_method if use_jit else lambda fn, _rcn=None: fn
+
 
 # As of March 10, 2019, Pytorch DataParallel still doesn't support JIT Script Modules
 use_jit = torch.cuda.device_count() <= 1
@@ -488,7 +492,13 @@ class Yolact(nn.Module):
     
     def load_weights(self, path):
         """ Loads weights from a compressed save file. """
-        state_dict = torch.load(path)
+        #state_dict = torch.load(path)
+
+        if torch.cuda.is_available():
+            state_dict = torch.load(path)
+        else:
+            state_dict = torch.load(path, map_location=torch.device('cpu'))
+
 
         # For backward compatability, remove these (the new variable is called layers)
         for key in list(state_dict.keys()):

@@ -623,14 +623,21 @@ class FastBaseTransform(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.mean = torch.Tensor(MEANS).float().cuda()[None, :, None, None]
-        self.std  = torch.Tensor( STD ).float().cuda()[None, :, None, None]
+        self.mean = torch.Tensor(MEANS).float()[None, :, None, None]
+        self.std  = torch.Tensor( STD ).float()[None, :, None, None]
+
+        if torch.cuda.is_available():
+            self.mean.cuda()
+            self.std.cuda()
+
         self.transform = cfg.backbone.transform
 
     def forward(self, img):
         self.mean = self.mean.to(img.device)
         self.std  = self.std.to(img.device)
-        
+
+
+
         # img assumed to be a pytorch BGR image with channel order [n, h, w, c]
         if cfg.preserve_aspect_ratio:
             _, h, w, _ = img.size()
