@@ -401,6 +401,8 @@ class Yolact(nn.Module):
 
         self.backbone = construct_backbone(cfg.backbone)
 
+        self.save_onnx = save_onnx
+
         if cfg.freeze_bn:
             self.freeze_bn()
 
@@ -673,7 +675,7 @@ class Yolact(nn.Module):
                 else:
                     pred_outs['conf'] = F.softmax(pred_outs['conf'], -1)
 
-            if save_onnx:
+            if self.save_onnx:
                 pred_outs['boxes'] = decode(pred_outs['loc'], pred_outs['priors']) # decode output boxes
                 pred_outs.pop('priors') # remove unused in postprocessing layers
                 pred_outs.pop('loc') # remove unused in postprocessing layers
