@@ -396,7 +396,7 @@ class Yolact(nn.Module):
         - pred_aspect_ratios: A list of lists of aspect ratios with len(selected_layers) (see PredictionModule)
     """
 
-    def __init__(self):
+    def __init__(self, save_onnx=False):
         super().__init__()
 
         self.backbone = construct_backbone(cfg.backbone)
@@ -673,7 +673,13 @@ class Yolact(nn.Module):
                 else:
                     pred_outs['conf'] = F.softmax(pred_outs['conf'], -1)
 
-            return self.detect(pred_outs, self)
+            if save_onnx:
+                pred_outs['boxes'] = decode(pred_outs['loc'], pred_outs['priors']) # decode output boxes
+                pred_outs.pop('priors') # remove unused in postprocessing layers
+                pred_outs.pop('loc') # remove unused in postprocessing layers
+                return pred_outs
+            else:
+                return self.detect(pred_outs, self)
 
 
 
