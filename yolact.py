@@ -685,7 +685,7 @@ class Yolact(nn.Module):
                     pred_outs['conf'] = F.softmax(pred_outs['conf'], -1)
 
             if self.save_onnx:
-                pred_outs['boxes'] = self.decode(pred_outs['loc'], pred_outs['priors']) # decode output boxes
+                pred_outs['boxes'] = self.decode(self, pred_outs['loc'], pred_outs['priors']) # decode output boxes
                 pred_outs.pop('priors') # remove unused in postprocessing layers
                 pred_outs.pop('loc') # remove unused in postprocessing layers
                 return pred_outs
